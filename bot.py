@@ -17,9 +17,6 @@ MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "USD")
 from rates import get_rates, format_rate_response
 from cardbin import get_bin, format_bin_response
 
-async def start(update, context):
-    await update.message.reply_text(f'你好，我是卡粉工具箱机器人，由 @monlor 开发，当前Telegram库版本 {TG_VER}')
-
 async def rate_command(update, context):
     input_text = update.message.text.split()
     usage_text = 'Usage: /rate [目标货币，例如HKD] [金额]'
@@ -63,12 +60,10 @@ async def delete_message(data):
 
 async def post_init(application: Application) -> None:
     """Set up the bot commands and handlers."""
-    application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('rate', rate_command))
     application.add_handler(CommandHandler('bin', bin_command))
 
     await application.bot.set_my_commands([
-        ('start', '开始'),
         ('rate', f'查询最近{QUERY_DAYS}天兑换{MAIN_CURRENCY}的汇率'),
         ('bin', '查询银行卡BIN')
     ])
