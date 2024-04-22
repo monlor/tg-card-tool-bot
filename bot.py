@@ -11,7 +11,6 @@ load_dotenv()
 
 TOKEN = os.getenv("BOT_TOKEN")
 DELETE_DELAY = int(os.getenv("DELETE_DELAY", 60))
-QUERY_DAYS = int(os.getenv("QUERY_DAYS", 5))
 MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "CNY")
 
 from rates import get_rates, format_rate_response
@@ -40,8 +39,12 @@ async def rate_command(update, context):
         await update.message.reply_text(usage_text)
         return
     
-    rates = get_rates(source, target, QUERY_DAYS)
-    response = format_rate_response(MAIN_CURRENCY, target, amount, DELETE_DELAY, rates)
+    rate = get_rates(source, target)
+    response = ""
+    if rate == None:
+        response = "😭 查询失败，当前货币对可能不存在！"
+    else:
+        response = format_rate_response(source, target, amount, DELETE_DELAY, rate)
     
     message = await update.message.reply_text(response)
     context.job_queue.run_once(delete_message, DELETE_DELAY, data=[message.chat_id, message.message_id, context.bot])
@@ -74,7 +77,7 @@ async def post_init(application: Application) -> None:
     application.add_handler(CommandHandler('bin', bin_command))
 
     await application.bot.set_my_commands([
-        ('rate', f'查询最近{QUERY_DAYS}天兑换{MAIN_CURRENCY}的汇率'),
+        ('rate', f'查询汇率'),
         ('bin', '查询银行卡BIN')
     ])
 

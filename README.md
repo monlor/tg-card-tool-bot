@@ -7,12 +7,14 @@
 ### 汇率查询
 
 - 使用 /rate 命令查询最近指定天数内的汇率变化情况
-- 支持自定义主货币、汇率查询天数、消息删除延迟等参数  
+- 支持自定义主货币、消息删除延迟等参数  
 - 基于环境变量配置,方便部署和维护
+- 多api故障转移
 
 ### 卡BIN查询
 
 - 使用 /bin 命令查询银行卡Bin信息,包括发卡行和卡种类型
+- 多api故障转移
 
 ## 部署方式
 
@@ -33,7 +35,8 @@ docker run -d -e BOT_TOKEN=xxx ghcr.io/monlor/tg-card-tool-bot:main
 - `BOT_TOKEN`: 机器人令牌
 - `MAIN_CURRENCY`: 主货币,默认为美元 CNY
 - `DELETE_DELAY`: 消息自动删除延迟,单位为秒
-- `QUERY_DAYS`: 查询最近天数,默认为 5 天
+- `API_LAYER_KEY`: [备用卡BIN API](https://apilayer.com/marketplace/bincheck-api)，配置可选
+- `EXCHANGERATE_API_KEY`: [备用汇率API](https://app.exchangerate-api.com/keys)，配置可选
 
 ## 开发者
 

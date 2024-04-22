@@ -41,16 +41,16 @@ class TestRates(unittest.TestCase):
             }
         ]
         
-        rates = get_rates("CNY", "USD", 3)
-        print(rates)
-        self.assertEqual(len(rates), 3)
+        rate = get_rates("CNY", "USD")
+        print(rate)
+        # self.assertEqual(len(rates), 3)
         # self.assertEqual(rates[0]["date"], "2023-04-12")
         # self.assertEqual(rates[0]["rate"], 1.2345)
         
     def test_format_rate_response(self):
-        rates = [{'date': '2024-04-19', 'rate': 7.2403}, {'date': '2024-04-19', 'rate': 7.2403}, {'date': '2024-04-19', 'rate': 7.2382}]
+        rates = 7.24
         
-        response = format_rate_response("CNY", "USD", 100, 5, rates)
+        response = format_rate_response("USD", "CNY", 100, 5, rates)
         print(response)
 
 
