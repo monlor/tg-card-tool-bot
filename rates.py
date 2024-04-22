@@ -94,7 +94,7 @@ def format_rate_response(source, target, amount, delay, rate):
 
 
 def format_rates_list(delay):
-    output = "💡 汇率查询\n\n"
+    output = f"💡 汇率查询 {MAIN_CURRENCY}\n\n"
     for c in RATES_LIST:
         rate = get_rates(c['currency'], MAIN_CURRENCY)
         output += f"{c['description']}:  {rate}\n"
