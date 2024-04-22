@@ -155,6 +155,8 @@ def cardbin_input_parse(input_text, quote):
             bin = find_bin(quote)
             if bin == None:
                 return "😭 未识别到文本中的卡BIN信息！", bin
+        else:
+            return usage_text, bin
     else:
         return usage_text, bin
 
