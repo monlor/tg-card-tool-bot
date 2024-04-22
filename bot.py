@@ -33,7 +33,7 @@ async def rate_command(update, context):
     response = ""
     if source == None:
         # 展示汇率列表
-        response = format_rates_list(DELETE_DELAY)
+        response = format_rates_list(DELETE_DELAY, target)
     else:
         # 计算来源汇率
         rate = get_rates(source, target)
@@ -69,12 +69,14 @@ async def post_init(application: Application) -> None:
     application.add_handler(CommandHandler('rate', rate_command))
     application.add_handler(CommandHandler('rateu', rate_command))
     application.add_handler(CommandHandler('ratec', rate_command))
+    application.add_handler(CommandHandler('rateg', rate_command))
     application.add_handler(CommandHandler('bin', bin_command))
 
     await application.bot.set_my_commands([
-        ('rate', '汇率换算自定义'),
+        ('rate', '自定义汇率换算'),
         ('ratec', '汇率换算到CNY'),
         ('rateu', '汇率换算到USD'),
+        ('rateg', '汇率换算到GBP'),
         ('bin', '查询银行卡BIN')
     ])
 

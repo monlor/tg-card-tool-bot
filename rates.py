@@ -8,7 +8,7 @@ from cache import Cache
 
 load_dotenv()
 
-MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "CNY")
+MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "USD")
 
 EXCHANGERATE_API_KEY = os.getenv("EXCHANGERATE_API_KEY")
 
@@ -18,10 +18,12 @@ EXCHANGERATE_API = "https://v6.exchangerate-api.com/v6/{}/pair/{}/{}"
 
 RATES_LIST = [
     { 'currency': 'USD', 'description': '🇺🇸 美元' }, 
+    { 'currency': 'CNY', 'description': '🇨🇳 人民币' }, 
     { 'currency': 'GBP', 'description': '🇬🇧 英镑' }, 
     { 'currency': 'HKD', 'description': '🇭🇰 港币' }, 
     { 'currency': 'SGD', 'description': '🇸🇬 新元' }, 
     { 'currency': 'EUR', 'description': '🇪🇺 欧元' },
+    { 'currency': 'CAD', 'description': '🇨🇦 加元' },
     { 'currency': 'JPY', 'description': '🇯🇵 日元' },
     { 'currency': 'PHP', 'description': '🇵🇭 比索' }, 
     { 'currency': 'MYR', 'description': '🇲🇾 令吉' }, 
@@ -31,7 +33,7 @@ RATES_LIST = [
 ]
 
 # 汇率缓存3小时
-cache = Cache(default_expiration=10800)
+cache = Cache(default_expiration=21600)
 
 def format_timestamp(t):
     dt = datetime.datetime.fromtimestamp(int(t))
@@ -93,11 +95,14 @@ def format_rate_response(source, target, amount, delay, rate):
     return response
 
 
-def format_rates_list(delay):
-    output = f"💡 汇率查询 {MAIN_CURRENCY}\n\n"
+def format_rates_list(delay, main_currency):
+    output = f"💡 汇率查询 1 {main_currency}\n\n"
     for c in RATES_LIST:
-        rate = get_rates(c['currency'], MAIN_CURRENCY)
-        output += f"{c['description']}:  {rate}\n"
+        if c['currency'] == main_currency:
+            continue
+        rate = get_rates(main_currency, c['currency'])
+        if rate != None:
+            output += f"{c['description']}:  {rate}\n"
 
     output += f"\n👋 将在{delay}秒后删除消息..."
 
@@ -128,6 +133,8 @@ def rate_input_parse(input_text, quote):
         target = 'CNY'
     elif command == '/rateu':
         target = 'USD'
+    elif command == '/rateg':
+        target = 'GBP'
 
     if len(input_text) == 3:
         if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^\d+$', input_text[2]):
@@ -140,6 +147,10 @@ def rate_input_parse(input_text, quote):
         source = input_text[1].upper()
         target = input_text[2].upper()
         amount = float(input_text[3])
+    elif len(input_text) == 2:
+        if not re.match(r'^[A-Za-z]{3}$', input_text[1]):
+            return usage_text, source, target, amount
+        target = input_text[1].upper()
     elif len(input_text) == 1:
         if quote != None:
             # 如果引用文本中有金额和货币，则取引用文本的
