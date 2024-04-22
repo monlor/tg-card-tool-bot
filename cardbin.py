@@ -2,6 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 import datetime
+import re
 
 load_dotenv()
 
@@ -117,3 +118,44 @@ def format_bin_response(quote, data):
     output += f"\n👋 将在{DELETE_DELAY}秒后删除消息..."
     
     return output
+
+
+def find_bin(input_string):
+    if input_string == None:
+        return None
+    # Regular expression pattern for 8-digit numbers
+    pattern_8digits = r'\b\d{8}\b'
+    
+    # Regular expression pattern for 6-digit numbers
+    pattern_6digits = r'\b\d{6}\b'
+    
+    # Search for 8-digit numbers
+    match_8digits = re.search(pattern_8digits, input_string)
+    if match_8digits:
+        return match_8digits.group()
+    
+    # If no 8-digit number is found, search for 6-digit numbers
+    match_6digits = re.search(pattern_6digits, input_string)
+    if match_6digits:
+        return match_6digits.group()
+    
+    # If no match is found, return None
+    return None
+
+def cardbin_input_parse(input_text, quote):
+    usage_text = 'Usage: /bin [BIN号码6,8位]'
+    bin = None
+
+    if len(input_text) == 2:
+        if len(input_text[1]) != 6 and len(input_text[1]) != 8:
+            return usage_text, bin
+        bin = input_text[1]
+    elif len(input_text) == 1:
+        if quote != None:
+            bin = find_bin(quote)
+            if bin == None:
+                return "😭 未识别到文本中的卡BIN信息！", bin
+    else:
+        return usage_text, bin
+
+    return None, bin
