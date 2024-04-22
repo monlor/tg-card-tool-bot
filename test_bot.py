@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 from rates import get_rates, format_rate_response
+import re
 
 class TestRates(unittest.TestCase):
 
@@ -40,7 +41,7 @@ class TestRates(unittest.TestCase):
             }
         ]
         
-        rates = get_rates("CNY")
+        rates = get_rates("CNY", "USD", 3)
         print(rates)
         self.assertEqual(len(rates), 3)
         # self.assertEqual(rates[0]["date"], "2023-04-12")
@@ -49,8 +50,38 @@ class TestRates(unittest.TestCase):
     def test_format_rate_response(self):
         rates = [{'date': '2024-04-19', 'rate': 7.2403}, {'date': '2024-04-19', 'rate': 7.2403}, {'date': '2024-04-19', 'rate': 7.2382}]
         
-        response = format_rate_response("CNY", 100, rates)
+        response = format_rate_response("CNY", "USD", 100, 5, rates)
         print(response)
+
+
+    def valide_input_text(self, input_text):
+        source = ""
+        target = "USD"
+        amount = 0
+        if len(input_text) == 3:
+            if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^\d+$', input_text[2]):
+                self.fail('参数错误')
+                self.fail()
+                return
+            source = input_text[1].upper()
+            amount = float(input_text[2])
+        elif len(input_text) == 4:
+            if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^[A-Za-z]{3}$', input_text[2]) or not re.match(r'^\d+$', input_text[3]):
+                self.fail('参数错误')
+                return
+            source = input_text[1].upper()
+            target = input_text[2].upper()
+            amount = float(input_text[3])
+        else:
+            self.fail('参数错误')
+            return 
+
+        print(source, target, amount)
+
+    def test_input_text(self):
+        
+        self.valide_input_text([ "0", "GBP", "100" ])
+        self.valide_input_text([ "0", "GBP", "CNY", "100" ])
         
 if __name__ == "__main__":
     unittest.main()

@@ -10,28 +10,38 @@ from telegram.ext import Application, ApplicationBuilder, CommandHandler, Contex
 load_dotenv()
 
 TOKEN = os.getenv("BOT_TOKEN")
-DELETE_DELAY = int(os.getenv("DELETE_DELAY", 30))
+DELETE_DELAY = int(os.getenv("DELETE_DELAY", 60))
 QUERY_DAYS = int(os.getenv("QUERY_DAYS", 5))
-MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "USD")
+MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "CNY")
 
 from rates import get_rates, format_rate_response
 from cardbin import get_bin, format_bin_response
 
 async def rate_command(update, context):
     input_text = update.message.text.split()
-    usage_text = 'Usage: /rate [目标货币，例如HKD] [金额]'
-    if len(input_text) != 3:
-        await update.message.reply_text(usage_text)
-        return
-    if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^\d+$', input_text[2]):
+    usage_text = 'Usage: /rate [货币，例如HKD] [金额]; /rate [来源货币] [目标货币] [来源金额]'
+    source = ""
+    target = MAIN_CURRENCY
+    amount = 0
+    if len(input_text) == 3:
+        if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^\d+$', input_text[2]):
+            await update.message.reply_text(usage_text)
+            return
+        source = input_text[1].upper()
+        amount = float(input_text[2])
+    elif len(input_text) == 4:
+        if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^[A-Za-z]{3}$', input_text[2]) or not re.match(r'^\d+$', input_text[3]):
+            await update.message.reply_text(usage_text)
+            return
+        source = input_text[1].upper()
+        target = input_text[2].upper()
+        amount = float(input_text[3])
+    else:
         await update.message.reply_text(usage_text)
         return
     
-    quote = input_text[1].upper()
-    amount = float(input_text[2])
-    
-    rates = get_rates(quote)
-    response = format_rate_response(quote, amount, rates)
+    rates = get_rates(source, target, QUERY_DAYS)
+    response = format_rate_response(MAIN_CURRENCY, target, amount, DELETE_DELAY, rates)
     
     message = await update.message.reply_text(response)
     context.job_queue.run_once(delete_message, DELETE_DELAY, data=[message.chat_id, message.message_id, context.bot])

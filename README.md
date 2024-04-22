@@ -24,14 +24,14 @@ docker run -d -e BOT_TOKEN=xxx ghcr.io/monlor/tg-card-tool-bot:main
 
 1. 在 Telegram 客户端中搜索并与机器人 @card_tool_bot 对话
 2. 输入 `/rate [货币代码] [金额]` 查询汇率,例如 `/rate CNY 100`
-3. 输入 `/bin [卡号前6位]` 查询卡Bin信息,例如 `/bin 456783`
+3. 输入 `/bin [卡号前6位或8位]` 查询卡Bin信息,例如 `/bin 456783`
 
 ## 配置选项
 
 以下配置参数可在 .env 文件中修改:
 
 - `BOT_TOKEN`: 机器人令牌
-- `MAIN_CURRENCY`: 主货币,默认为美元 USD
+- `MAIN_CURRENCY`: 主货币,默认为美元 CNY
 - `DELETE_DELAY`: 消息自动删除延迟,单位为秒
 - `QUERY_DAYS`: 查询最近天数,默认为 5 天
 
