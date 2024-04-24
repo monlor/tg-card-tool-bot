@@ -14,14 +14,24 @@ DELETE_DELAY = int(os.getenv("DELETE_DELAY", 60))
 
 from rates import rate_input_parse, get_rates, format_rate_response, format_rates_list
 from cardbin import cardbin_input_parse, get_bin, format_bin_response
+from spotify import spotify_input_parse, format_spotify_prices
 
 def parse_input(update):
     input_text = update.message.text.split()
     replied_message = update.effective_message.reply_to_message
     quote = None
+
     if replied_message:
         quote = replied_message.text
+
     return input_text, quote
+
+def get_delay(update):
+    chat = update.effective_chat
+    if chat.type == chat.PRIVATE:
+        return None
+    else:
+        return DELETE_DELAY
 
 async def rate_command(update, context):
     input_text, quote = parse_input(update)
@@ -29,21 +39,31 @@ async def rate_command(update, context):
     if msg != None:
         await update.message.reply_text(msg)
         return
+    delay = get_delay(update)
+
+    # 先发送处理消息
+    message = await update.message.reply_text("正在查询，请稍等...")
 
     response = ""
     if source == None:
         # 展示汇率列表
-        response = format_rates_list(DELETE_DELAY, target)
+        response = format_rates_list(delay, target)
     else:
         # 计算来源汇率
         rate = get_rates(source, target)
         if rate == None:
             response = f"😭 查询失败，当前货币对 {source}:{target} 可能不存在！"
         else:
-            response = format_rate_response(source, target, amount, DELETE_DELAY, rate)
+            response = format_rate_response(source, target, amount, delay, rate)
     
-    message = await update.message.reply_text(response)
-    context.job_queue.run_once(delete_message, DELETE_DELAY, data=[message.chat_id, message.message_id, context.bot])
+    await context.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
+        message_id=message.message_id,
+        text=response
+    )
+
+    if delay != None:
+        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
 
 async def bin_command(update, context):
 
@@ -53,12 +73,44 @@ async def bin_command(update, context):
     if msg != None:
         await update.message.reply_text(msg)
         return
+    delay = get_delay(update)
+
+    # 先发送处理消息
+    message = await update.message.reply_text("正在查询，请稍等...")
         
     bininfo = get_bin(bin)
-    response = format_bin_response(bin, bininfo)
+    response = format_bin_response(bin, bininfo, delay)
     
-    message = await update.message.reply_text(response)
-    context.job_queue.run_once(delete_message, DELETE_DELAY, data=[message.chat_id, message.message_id, context.bot])
+    await context.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
+        message_id=message.message_id,
+        text=response
+    )
+    if delay != None:
+        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
+
+async def spotify_command(update, context):
+
+    input_text, quote = parse_input(update)
+
+    msg, currency = spotify_input_parse(input_text, quote)
+    if msg != None:
+        await update.message.reply_text(msg)
+        return
+    delay = get_delay(update)
+
+    # 先发送处理消息
+    message = await update.message.reply_text("正在查询，请稍等...")
+        
+    response = format_spotify_prices(currency, delay)
+    
+    await context.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
+        message_id=message.message_id,
+        text=response
+    )
+    if delay != None:
+        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
 
 async def delete_message(data):
     chat_id, message_id, bot = data.job.data
@@ -71,13 +123,15 @@ async def post_init(application: Application) -> None:
     application.add_handler(CommandHandler('ratec', rate_command))
     application.add_handler(CommandHandler('rateg', rate_command))
     application.add_handler(CommandHandler('bin', bin_command))
+    application.add_handler(CommandHandler('spotify', spotify_command))
 
     await application.bot.set_my_commands([
         ('rate', '自定义汇率换算'),
         ('ratec', '汇率换算到CNY'),
         ('rateu', '汇率换算到USD'),
         ('rateg', '汇率换算到GBP'),
-        ('bin', '查询银行卡BIN')
+        ('bin', '查询银行卡BIN'),
+        ('spotify', '查询各个地区Spotify的价格')
     ])
 
 def main() -> None:

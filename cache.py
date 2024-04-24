@@ -1,4 +1,5 @@
 import time
+import copy
 
 class Cache:
     def __init__(self, default_expiration=None):
@@ -15,9 +16,9 @@ class Cache:
 
         if expiration:
             expiration_time = time.time() + expiration
-            self.cache[key] = (value, expiration_time)
+            self.cache[key] = (copy.deepcopy(value), expiration_time)
         else:
-            self.cache[key] = (value, None)
+            self.cache[key] = (copy.deepcopy(value), None)
 
     def get(self, key):
         """
@@ -27,7 +28,7 @@ class Cache:
         if expiration_time and time.time() > expiration_time:
             self.delete(key)
             return None
-        return value
+        return copy.deepcopy(value)
 
     def delete(self, key):
         """

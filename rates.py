@@ -90,7 +90,8 @@ def format_rate_response(source, target, amount, delay, rate):
     equiv_amount = amount * rate
     response += f"\n💰 货币换算: {amount} {source} = {equiv_amount:.2f} {target}\n"
 
-    response += f"\n👋 将在{delay}秒后删除消息..."
+    if delay != None:
+        response += f"\n👋 将在{delay}秒后删除消息..."
 
     return response
 
@@ -104,7 +105,8 @@ def format_rates_list(delay, main_currency):
         if rate != None:
             output += f"{c['description']}:  {rate}\n"
 
-    output += f"\n👋 将在{delay}秒后删除消息..."
+    if delay != None:
+        output += f"\n👋 将在{delay}秒后删除消息..."
 
     return output
 
@@ -137,12 +139,12 @@ def rate_input_parse(input_text, quote):
         target = 'GBP'
 
     if len(input_text) == 3:
-        if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^\d+$', input_text[2]):
+        if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^\d+(\.\d+)?$', input_text[2]):
             return usage_text, source, target, amount
         source = input_text[1].upper()
         amount = float(input_text[2])
     elif len(input_text) == 4:
-        if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^[A-Za-z]{3}$', input_text[2]) or not re.match(r'^\d+$', input_text[3]):
+        if not re.match(r'^[A-Za-z]{3}$', input_text[1]) or not re.match(r'^[A-Za-z]{3}$', input_text[2]) or not re.match(r'^\d+(\.\d+)?$', input_text[3]):
             return usage_text, source, target, amount
         source = input_text[1].upper()
         target = input_text[2].upper()

@@ -3,6 +3,7 @@ import requests
 from dotenv import load_dotenv
 import datetime
 import re
+from cache import Cache
 
 load_dotenv()
 
@@ -10,7 +11,8 @@ BINLIST_API = "https://lookup.binlist.net/{}"
 API_LAYER_API = "https://api.apilayer.com/bincheck/{}"
 HANDYAPI_API = "https://data.handyapi.com/bin/{}"
 API_LAYER_KEY = os.getenv("API_LAYER_KEY")
-DELETE_DELAY = int(os.getenv("DELETE_DELAY", 60))
+
+cache = Cache()
 
 def get_bin_from_binlist(quote):
     api_url = BINLIST_API.format(quote)
@@ -91,16 +93,21 @@ def get_bin_from_apilayer(quote):
     }
 
 def get_bin(quote):
-    res = get_bin_from_binlist(quote)
 
-    if (res == None):
+    res = cache.get(quote)
+
+    if res == None:
+        res = get_bin_from_binlist(quote)
+        cache.set(quote, res)
+
+    if res == None:
         res = get_bin_from_handyapi(quote)
         if (res == None) and API_LAYER_KEY:
             res = get_bin_from_apilayer(quote)
 
     return res
 
-def format_bin_response(quote, data):
+def format_bin_response(quote, data, delay):
     if not data:
         return "获取数据失败或数据为空。"
 
@@ -115,7 +122,8 @@ def format_bin_response(quote, data):
     if data['prepaid'] != None:
         output += f"\n📲 是否预付卡：{'✅' if data['prepaid'] else '❌'}\n"
 
-    output += f"\n👋 将在{DELETE_DELAY}秒后删除消息..."
+    if delay != None:
+        output += f"\n👋 将在{delay}秒后删除消息..."
     
     return output
 
