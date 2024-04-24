@@ -33,7 +33,7 @@ RATES_LIST = [
 ]
 
 # 汇率缓存3小时
-cache = Cache(default_expiration=21600)
+cache = Cache(default_expiration=86400)
 
 def format_timestamp(t):
     dt = datetime.datetime.fromtimestamp(int(t))

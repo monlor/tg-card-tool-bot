@@ -18,6 +18,11 @@
 - 支持聊天引用识别卡BIN
 - 多api故障转移
 
+### 流媒体价格查询
+
+- 查询Spotify各个地区的价格，支持汇率换算，排序
+- 查询Netflix各个地区的价格，支持汇率换算，排序
+
 ## 部署方式
 
 ```
@@ -29,6 +34,8 @@ docker run -d -e BOT_TOKEN=xxx ghcr.io/monlor/tg-card-tool-bot:main
 1. 在 Telegram 客户端中搜索并与机器人 @card_tool_bot 对话
 2. 输入 `/rate [货币代码] [金额]` 查询汇率,例如 `/rate CNY 100`
 3. 输入 `/bin [卡号前6位或8位]` 查询卡Bin信息,例如 `/bin 456783`
+4. 输入 `/spotify (币种)` 查询Spotify价格
+5. 输入 `/netflix (币种)` 查询Netflix价格
 
 ## 配置选项
 

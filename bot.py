@@ -15,6 +15,7 @@ DELETE_DELAY = int(os.getenv("DELETE_DELAY", 60))
 from rates import rate_input_parse, get_rates, format_rate_response, format_rates_list
 from cardbin import cardbin_input_parse, get_bin, format_bin_response
 from spotify import spotify_input_parse, format_spotify_prices
+from netflix import netflix_input_parse, format_netflix_prices
 
 def parse_input(update):
     input_text = update.message.text.split()
@@ -112,6 +113,29 @@ async def spotify_command(update, context):
     if delay != None:
         context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
 
+async def netflix_command(update, context):
+
+    input_text, quote = parse_input(update)
+
+    msg, currency = netflix_input_parse(input_text, quote)
+    if msg != None:
+        await update.message.reply_text(msg)
+        return
+    delay = get_delay(update)
+
+    # 先发送处理消息
+    message = await update.message.reply_text("正在查询，请稍等...")
+        
+    response = format_netflix_prices(currency, delay)
+    
+    await context.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
+        message_id=message.message_id,
+        text=response
+    )
+    if delay != None:
+        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
+
 async def delete_message(data):
     chat_id, message_id, bot = data.job.data
     await bot.delete_message(chat_id=chat_id, message_id=message_id)
@@ -124,6 +148,7 @@ async def post_init(application: Application) -> None:
     application.add_handler(CommandHandler('rateg', rate_command))
     application.add_handler(CommandHandler('bin', bin_command))
     application.add_handler(CommandHandler('spotify', spotify_command))
+    application.add_handler(CommandHandler('netflix', netflix_command))
 
     await application.bot.set_my_commands([
         ('rate', '自定义汇率换算'),
@@ -131,7 +156,8 @@ async def post_init(application: Application) -> None:
         ('rateu', '汇率换算到USD'),
         ('rateg', '汇率换算到GBP'),
         ('bin', '查询银行卡BIN'),
-        ('spotify', '查询各个地区Spotify的价格')
+        ('spotify', '查询各个地区Spotify的价格'),
+        ('netflix', '查询各个地区Netflix的价格')
     ])
 
 def main() -> None:
