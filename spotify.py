@@ -13,16 +13,16 @@ cache = Cache(default_expiration=86400)
 countries = [
     {"code": "HK", "group_symbol": ",", "currency": "HKD", "description": "🇭🇰 香港"},
     {"code": "US", "group_symbol": ",", "currency": "USD", "description": "🇺🇸 美国"},
-    # {"code": "UK", "group_symbol": ",", "currency": "GBP", "description": "🇬🇧 英国"},
-    # {"code": "SG", "group_symbol": ",", "currency": "SGD", "description": "🇸🇬 新加坡"},
-    # {"code": "DE", "group_symbol": ",", "currency": "EUR", "description": "🇩🇪 德国"},
-    # {"code": "PH", "group_symbol": ",", "currency": "PHP", "description": "🇵🇭 菲律宾"},
-    # {"code": "MY", "group_symbol": ",", "currency": "MYR", "description": "🇲🇾 马来西亚"},
-    # {"code": "TR", "group_symbol": ".", "currency": "TRY", "description": "🇹🇷 土耳其"},
-    # {"code": "NG", "group_symbol": ",", "currency": "NGN", "description": "🇳🇬 尼日利亚"},
-    # {"code": "VN", "group_symbol": ".", "currency": "VND", "description": "🇻🇳 越南"},
-    # {"code": "AR", "group_symbol": ".", "currency": "ARS", "description": "🇦🇷 阿根廷"},
-    # {"code": "JP", "group_symbol": ",", "currency": "JPY", "description": "🇯🇵 日本"}
+    {"code": "UK", "group_symbol": ",", "currency": "GBP", "description": "🇬🇧 英国"},
+    {"code": "SG", "group_symbol": ",", "currency": "SGD", "description": "🇸🇬 新加坡"},
+    {"code": "DE", "group_symbol": ",", "currency": "EUR", "description": "🇩🇪 德国"},
+    {"code": "PH", "group_symbol": ",", "currency": "PHP", "description": "🇵🇭 菲律宾"},
+    {"code": "MY", "group_symbol": ",", "currency": "MYR", "description": "🇲🇾 马来西亚"},
+    {"code": "TR", "group_symbol": ".", "currency": "TRY", "description": "🇹🇷 土耳其"},
+    {"code": "NG", "group_symbol": ",", "currency": "NGN", "description": "🇳🇬 尼日利亚"},
+    {"code": "VN", "group_symbol": ".", "currency": "VND", "description": "🇻🇳 越南"},
+    {"code": "AR", "group_symbol": ".", "currency": "ARS", "description": "🇦🇷 阿根廷"},
+    {"code": "JP", "group_symbol": ",", "currency": "JPY", "description": "🇯🇵 日本"}
 ]
 
 MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "USD")
