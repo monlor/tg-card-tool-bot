@@ -15,7 +15,7 @@ countries = [
     {"code": "US", "group_symbol": ",", "currency": "USD", "description": "🇺🇸 美国"},
     {"code": "UK", "group_symbol": ",", "currency": "GBP", "description": "🇬🇧 英国"},
     {"code": "SG", "group_symbol": ",", "currency": "SGD", "description": "🇸🇬 新加坡"},
-    {"code": "DE", "group_symbol": ",", "currency": "EUR", "description": "🇩🇪 德国"},
+    {"code": "DE", "group_symbol": ".", "currency": "EUR", "description": "🇩🇪 德国"},
     {"code": "PH", "group_symbol": ",", "currency": "PHP", "description": "🇵🇭 菲律宾"},
     {"code": "MY", "group_symbol": ",", "currency": "MYR", "description": "🇲🇾 马来西亚"},
     {"code": "TR", "group_symbol": ".", "currency": "TRY", "description": "🇹🇷 土耳其"},

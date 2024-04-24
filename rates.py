@@ -40,6 +40,9 @@ def format_timestamp(t):
     return dt.strftime('%Y-%m-%d')
 
 def get_rates_from_economia(source, target):
+    # jpy => usd 汇率错误
+    if source in ['JPY']:
+        return None
     data = []
     try:
         api_url = ECONOMIA_API.format(source, target, 1)
