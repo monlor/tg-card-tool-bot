@@ -16,6 +16,7 @@ from rates import rate_input_parse, get_rates, format_rate_response, format_rate
 from cardbin import cardbin_input_parse, get_bin, format_bin_response
 from spotify import spotify_input_parse, format_spotify_prices
 from netflix import netflix_input_parse, format_netflix_prices
+from appstore import appstore_input_parse, format_appstore_prices
 
 def parse_input(update):
     input_text = update.message.text.split()
@@ -93,6 +94,7 @@ async def bin_command(update, context):
 async def spotify_command(update, context):
 
     input_text, quote = parse_input(update)
+    command = input_text[0]
 
     msg, currency = spotify_input_parse(input_text, quote)
     if msg != None:
@@ -100,10 +102,14 @@ async def spotify_command(update, context):
         return
     delay = get_delay(update)
 
+    exchange = True
+    if command == '/spotifyo':
+        exchange = False
+
     # 先发送处理消息
     message = await update.message.reply_text("正在查询，请稍等...")
         
-    response = format_spotify_prices(currency, delay)
+    response = format_spotify_prices(currency, delay, exchange)
     
     await context.bot.edit_message_text(
         chat_id=update.effective_chat.id,
@@ -116,6 +122,7 @@ async def spotify_command(update, context):
 async def netflix_command(update, context):
 
     input_text, quote = parse_input(update)
+    command = input_text[0]
 
     msg, currency = netflix_input_parse(input_text, quote)
     if msg != None:
@@ -123,10 +130,42 @@ async def netflix_command(update, context):
         return
     delay = get_delay(update)
 
+    exchange = True
+    if command == '/netflixo':
+        exchange = False
+
     # 先发送处理消息
     message = await update.message.reply_text("正在查询，请稍等...")
         
-    response = format_netflix_prices(currency, delay)
+    response = format_netflix_prices(currency, delay, exchange)
+    
+    await context.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
+        message_id=message.message_id,
+        text=response
+    )
+    if delay != None:
+        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
+
+async def appstore_command(update, context):
+
+    input_text, quote = parse_input(update)
+    command = input_text[0]
+
+    msg, currency, country_code, app_name, app_id = appstore_input_parse(input_text, quote)
+    if msg != None:
+        await update.message.reply_text(msg)
+        return
+    delay = get_delay(update)
+
+    exchange = True
+    if command == '/appstoreo':
+        exchange = False
+
+    # 先发送处理消息
+    message = await update.message.reply_text("正在查询，请稍等...")
+        
+    response = format_appstore_prices(currency, country_code, app_name, app_id, delay, exchange)
     
     await context.bot.edit_message_text(
         chat_id=update.effective_chat.id,
@@ -148,7 +187,11 @@ async def post_init(application: Application) -> None:
     application.add_handler(CommandHandler('rateg', rate_command))
     application.add_handler(CommandHandler('bin', bin_command))
     application.add_handler(CommandHandler('spotify', spotify_command))
+    application.add_handler(CommandHandler('spotifyo', spotify_command))
     application.add_handler(CommandHandler('netflix', netflix_command))
+    application.add_handler(CommandHandler('netflixo', netflix_command))
+    application.add_handler(CommandHandler('appstore', appstore_command))
+    application.add_handler(CommandHandler('appstoreo', appstore_command))
 
     await application.bot.set_my_commands([
         ('rate', '自定义汇率换算'),
@@ -156,8 +199,12 @@ async def post_init(application: Application) -> None:
         ('rateu', '汇率换算到USD'),
         ('rateg', '汇率换算到GBP'),
         ('bin', '查询银行卡BIN'),
-        ('spotify', '查询各个地区Spotify的价格'),
-        ('netflix', '查询各个地区Netflix的价格')
+        ('spotify', '查询各个地区Spotify的汇率换算价格'),
+        ('spotifyo', '查询各个地区Spotify的本地货币价格'),
+        ('netflix', '查询各个地区Netflix的汇率换算价格'),
+        ('netflixo', '查询各个地区Netflix的本地货币价格'),
+        ('appstore', '查询各个地区AppStore的汇率换算价格'),
+        ('appstoreo', '查询各个地区AppStore的本地货币价格')
     ])
 
 def main() -> None:

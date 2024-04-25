@@ -2,12 +2,12 @@ import re
 import requests
 from dotenv import load_dotenv
 from cache import Cache
-from rates import get_rates
+from rates import do_exchange
 import os
 
 load_dotenv()
 
-# 汇率缓存3小时
+# 汇率缓存24小时
 cache = Cache(default_expiration=86400)
 
 countries = [
@@ -24,10 +24,11 @@ countries = [
     {"code": "AR", "group_symbol": ",", "currency": "ARS", "description": "🇦🇷 阿根廷"},
     {"code": "JP", "group_symbol": ",", "currency": "JPY", "description": "🇯🇵 日本"},
     {"code": "PK", "group_symbol": ",", "currency": "PKR", "description": "🇵🇰 巴基斯坦"},
-    {"code": "AU", "group_symbol": ",", "currency": "AUD", "description": "🇦🇺 澳大利亚"}
+    {"code": "AU", "group_symbol": ",", "currency": "AUD", "description": "🇦🇺 澳大利亚"},
+    {"code": "EG", "group_symbol": ",", "currency": "EGP", "description": "🇪🇬 埃及"}
 ]
 
-MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "USD")
+MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "CNY")
 
 def parse_primary_price(body):
     last_price = None
@@ -97,33 +98,26 @@ def list_netflix_price(countries):
 
     return result
 
-
-def format_netflix_prices(currency, delay):
+def format_netflix_prices(currency, delay, exchange):
     prices = list_netflix_price(countries)
-    output = f'💡 Netflix 价格查询 {currency}\n\n'
+    
+    # 判断是否做汇率换算
+    if exchange:
+        do_exchange(prices, currency)
+        prices = sorted(prices, key=lambda x: x['target_price'])
+        output = f'💡 Netflix 价格查询 {currency}\n\n'
+    else:
+        prices = sorted(prices, key=lambda x: x['country_code'])
+        output = f'💡 Netflix 价格查询\n\n'
 
     for item in prices:
         if item['err'] != None:
+            output += f"{item['description']} 👉 {item['err']}\n"
             continue
-        target_price = 0
-        price = item['price']
-        description = item['description']
-        if price != None:
-            if item['currency'] != currency:
-                rate = get_rates(item['currency'], currency)
-                if rate != None:
-                    target_price = price * rate
-            else:
-                target_price = price
-        item['target_price'] = target_price
-
-    prices = sorted(prices, key=lambda x: x['target_price'])
-
-    for item in prices:
-        if item['err'] != None:
-            output += f"{item['description']} {item['err']}"
-            continue
-        output += f"{item['description']} 💰 {item['price']} {item['currency']} 👉 {item['target_price']:.2f} {currency}\n"
+        if exchange:
+            output += f"{item['description']} 👉 {item['target_price']:.2f} {currency}\n"
+        else:
+            output += f"{item['description']} 👉 {item['price']} {item['currency']}\n"
     
     if delay != None:
         output += f"\n👋 将在{delay}秒后删除消息..."

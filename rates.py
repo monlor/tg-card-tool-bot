@@ -8,7 +8,7 @@ from cache import Cache
 
 load_dotenv()
 
-MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "USD")
+MAIN_CURRENCY = os.getenv("MAIN_CURRENCY", "CNY")
 
 EXCHANGERATE_API_KEY = os.getenv("EXCHANGERATE_API_KEY")
 
@@ -166,3 +166,26 @@ def rate_input_parse(input_text, quote):
         return usage_text, source, target, amount
 
     return None, source, target, amount
+
+
+# 汇率换算，存在key err,price,target_price,currency
+def do_exchange(items, currency):
+    for item in items:
+        if item['err'] != None:
+            continue
+        target_price = 0
+        price = item['price']
+        if price != None:
+            if item['currency'] != currency:
+                rate = get_rates(item['currency'], currency)
+                if rate != None:
+                    target_price = price * rate
+                else:
+                    item['err'] = '汇率获取失败！'
+            else:
+                target_price = price
+        else:
+            item['err'] = '价格获取失败！'
+        item['target_price'] = target_price
+
+    return items
