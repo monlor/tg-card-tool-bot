@@ -111,7 +111,7 @@ async def format_appstore_prices(main_currency, country_code, app_name, app_id, 
     # 判断是否做汇率换算
     if exchange:
         await do_exchange(prices, main_currency)
-        rate = get_rates(currency, main_currency)
+        rate = await get_rates(currency, main_currency)
         if rate != None:
             app_price = app_price * rate
         else:
