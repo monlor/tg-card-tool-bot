@@ -51,6 +51,7 @@ docker run -d -e BOT_TOKEN=xxx ghcr.io/monlor/tg-card-tool-bot:main
 - `DELETE_DELAY`: 消息自动删除延迟,单位为秒
 - `API_LAYER_KEY`: [备用卡BIN API](https://apilayer.com/marketplace/bincheck-api)，配置可选
 - `EXCHANGERATE_API_KEY`: [备用汇率API](https://app.exchangerate-api.com/keys)，配置可选
+- `REFRESH_CACHE`: 自动刷新缓存，单位小时
 
 ## 开发者
 

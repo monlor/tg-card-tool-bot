@@ -9,6 +9,7 @@ load_dotenv()
 
 TOKEN = os.getenv("BOT_TOKEN")
 DELETE_DELAY = int(os.getenv("DELETE_DELAY", 60))
+REFRESH_CACHE = int(os.getenv("REFRESH_CACHE", 23))
 
 from rates import rate_input_parse, get_rates, format_rate_response, format_rates_list
 from cardbin import cardbin_input_parse, get_bin, format_bin_response
@@ -166,9 +167,34 @@ async def appstore_command(message: types.Message):
     if delay is not None:
         asyncio.create_task(delete_message(processing_msg, delay))
 
+async def refresh_cache():
+    while True:
+        print("Refresh cache for Netflix ...")
+        await format_netflix_prices('CNY', None, True)
+
+        print("Refresh cache for Spotify ...")
+        await format_spotify_prices('CNY', None, True)
+
+        print("Refresh cache for ratec ...")
+        await format_rates_list(None, 'CNY')
+
+        print("Refresh cache for rateu ...")
+        await format_rates_list(None, 'USD')
+
+        print("Refresh cache for rateg ...")
+        await format_rates_list(None, 'GBP')
+
+        wait_time = 60 * 60 * REFRESH_CACHE
+
+        print(f'Wait {REFRESH_CACHE} hours ...')
+
+        await asyncio.sleep(wait_time)
+
 if __name__ == '__main__':
     # executor.start_polling(dp, skip_updates=True)
     print('Bot started.')
     loop = asyncio.get_event_loop()
+    if REFRESH_CACHE != 0:
+        loop.create_task(refresh_cache())
     loop.create_task(dp.start_polling())
     loop.run_forever()
