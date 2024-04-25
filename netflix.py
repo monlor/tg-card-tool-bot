@@ -98,12 +98,12 @@ def list_netflix_price(countries):
 
     return result
 
-def format_netflix_prices(currency, delay, exchange):
+async def format_netflix_prices(currency, delay, exchange):
     prices = list_netflix_price(countries)
     
     # 判断是否做汇率换算
     if exchange:
-        do_exchange(prices, currency)
+        await do_exchange(prices, currency)
         prices = sorted(prices, key=lambda x: x['target_price'])
         output = f'💡 Netflix 价格查询 {currency}\n\n'
     else:
@@ -125,7 +125,7 @@ def format_netflix_prices(currency, delay, exchange):
     return output
 
 
-def netflix_input_parse(input_text, quote):
+async def netflix_input_parse(input_text, quote):
     usage_text = f'Usage: {input_text[0]} (货币)'
 
     currency = MAIN_CURRENCY

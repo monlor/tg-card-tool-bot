@@ -98,7 +98,7 @@ def get_data(currency, country_code, app_name, app_id):
 
     return None, services, app_price
 
-def format_appstore_prices(main_currency, country_code, app_name, app_id, delay, exchange):
+async def format_appstore_prices(main_currency, country_code, app_name, app_id, delay, exchange):
     err, flag, country_name, currency = get_country_info(country_code)
     if err != None:
         return err
@@ -110,7 +110,7 @@ def format_appstore_prices(main_currency, country_code, app_name, app_id, delay,
 
     # 判断是否做汇率换算
     if exchange:
-        do_exchange(prices, main_currency)
+        await do_exchange(prices, main_currency)
         rate = get_rates(currency, main_currency)
         if rate != None:
             app_price = app_price * rate
@@ -175,7 +175,7 @@ def extract_links_from_url(q):
         return links[0]
     return None
 
-def appstore_input_parse(input_text, quote):
+async def appstore_input_parse(input_text, quote):
     usage_text = f'Usage: {input_text[0]} [appstore url] (地区代码，如hk) (货币)'
 
     currency = MAIN_CURRENCY

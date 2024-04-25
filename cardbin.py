@@ -107,7 +107,9 @@ def get_bin(quote):
 
     return res
 
-def format_bin_response(quote, data, delay):
+async def format_bin_response(quote, delay):
+    data = get_bin(quote)
+
     if not data:
         return "获取数据失败或数据为空。"
 
@@ -150,7 +152,7 @@ def find_bin(input_string):
     # If no match is found, return None
     return None
 
-def cardbin_input_parse(input_text, quote):
+async def cardbin_input_parse(input_text, quote):
     usage_text = 'Usage: /bin [BIN号码6,8位]'
     bin = None
 

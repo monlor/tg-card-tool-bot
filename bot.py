@@ -1,11 +1,9 @@
 import os
 from dotenv import load_dotenv
-from telegram import __version__ as TG_VER
-import telegram.ext as tg
-import re
-
-from telegram import Update
-from telegram.ext import Application, ApplicationBuilder, CommandHandler, ContextTypes
+import aiogram
+from aiogram import Bot, Dispatcher, types
+from aiogram.utils import executor
+import asyncio
 
 load_dotenv()
 
@@ -18,200 +16,159 @@ from spotify import spotify_input_parse, format_spotify_prices
 from netflix import netflix_input_parse, format_netflix_prices
 from appstore import appstore_input_parse, format_appstore_prices
 
-def parse_input(update):
-    input_text = update.message.text.split()
-    replied_message = update.effective_message.reply_to_message
+bot = Bot(token=TOKEN)
+dp = Dispatcher(bot)
+
+async def parse_input(message):
+    input_text = message.text.split()
     quote = None
 
-    if replied_message:
-        quote = replied_message.text
+    if message.reply_to_message:
+        quote = message.reply_to_message.text
 
     return input_text, quote
 
-def get_delay(update):
-    chat = update.effective_chat
-    if chat.type == chat.PRIVATE:
+def get_delay(message):
+    if message.chat.type == "private":
         return None
     else:
         return DELETE_DELAY
 
-async def rate_command(update, context):
-    input_text, quote = parse_input(update)
-    msg, source, target, amount = rate_input_parse(input_text, quote)
-    if msg != None:
-        await update.message.reply_text(msg)
+async def delete_message(message, delay):
+    await asyncio.sleep(delay)
+    try:
+        await message.delete()
+    except Exception as e:
+        # Handle any exceptions that may occur during message deletion
+        print(f"Error deleting message: {e}")
+
+@dp.message_handler(commands=['rate', 'rateu', 'ratec', 'rateg'])
+async def rate_command(message: types.Message):
+    input_text, quote = await parse_input(message)
+    msg, source, target, amount = await rate_input_parse(input_text, quote)
+    if msg is not None:
+        await message.reply(msg)
         return
-    delay = get_delay(update)
+    delay = get_delay(message)
 
     # 先发送处理消息
-    message = await update.message.reply_text("正在查询，请稍等...")
+    processing_msg = await message.reply("正在查询，请稍等...")
 
     response = ""
-    if source == None:
+    if source is None:
         # 展示汇率列表
-        response = format_rates_list(delay, target)
+        response = await format_rates_list(delay, target)
     else:
         # 计算来源汇率
-        rate = get_rates(source, target)
-        if rate == None:
+        rate = await get_rates(source, target)
+        if rate is None:
             response = f"😭 查询失败，当前货币对 {source}:{target} 可能不存在！"
         else:
-            response = format_rate_response(source, target, amount, delay, rate)
-    
-    await context.bot.edit_message_text(
-        chat_id=update.effective_chat.id,
-        message_id=message.message_id,
-        text=response
-    )
+            response = await format_rate_response(source, target, amount, delay, rate)
 
-    if delay != None:
-        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
+    await processing_msg.edit_text(response)
 
-async def bin_command(update, context):
+    if delay is not None:
+        asyncio.create_task(delete_message(processing_msg, delay))
 
-    input_text, quote = parse_input(update)
+@dp.message_handler(commands=['bin'])
+async def bin_command(message: types.Message):
+    input_text, quote = await parse_input(message)
 
-    msg, bin = cardbin_input_parse(input_text, quote)
-    if msg != None:
-        await update.message.reply_text(msg)
+    msg, bin = await cardbin_input_parse(input_text, quote)
+    if msg is not None:
+        await message.reply(msg)
         return
-    delay = get_delay(update)
+    delay = get_delay(message)
 
     # 先发送处理消息
-    message = await update.message.reply_text("正在查询，请稍等...")
-        
-    bininfo = get_bin(bin)
-    response = format_bin_response(bin, bininfo, delay)
-    
-    await context.bot.edit_message_text(
-        chat_id=update.effective_chat.id,
-        message_id=message.message_id,
-        text=response
-    )
-    if delay != None:
-        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
+    processing_msg = await message.reply("正在查询，请稍等...")
 
-async def spotify_command(update, context):
+    response = await format_bin_response(bin, delay)
 
-    input_text, quote = parse_input(update)
+    await processing_msg.edit_text(response)
+
+    if delay is not None:
+        asyncio.create_task(delete_message(processing_msg, delay))
+
+@dp.message_handler(commands=['spotify', 'spotifyo'])
+async def spotify_command(message: types.Message):
+    input_text, quote = await parse_input(message)
     command = input_text[0]
 
-    msg, currency = spotify_input_parse(input_text, quote)
-    if msg != None:
-        await update.message.reply_text(msg)
+    msg, currency = await spotify_input_parse(input_text, quote)
+    if msg is not None:
+        await message.reply(msg)
         return
-    delay = get_delay(update)
+    delay = get_delay(message)
 
     exchange = True
     if command == '/spotifyo':
         exchange = False
 
     # 先发送处理消息
-    message = await update.message.reply_text("正在查询，请稍等...")
-        
-    response = format_spotify_prices(currency, delay, exchange)
-    
-    await context.bot.edit_message_text(
-        chat_id=update.effective_chat.id,
-        message_id=message.message_id,
-        text=response
-    )
-    if delay != None:
-        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
+    processing_msg = await message.reply("正在查询，请稍等...")
 
-async def netflix_command(update, context):
+    response = await format_spotify_prices(currency, delay, exchange)
 
-    input_text, quote = parse_input(update)
+    await processing_msg.edit_text(response)
+
+    if delay is not None:
+        asyncio.create_task(delete_message(processing_msg, delay))
+
+@dp.message_handler(commands=['netflix', 'netflixo'])
+async def netflix_command(message: types.Message):
+    input_text, quote = await parse_input(message)
     command = input_text[0]
 
-    msg, currency = netflix_input_parse(input_text, quote)
-    if msg != None:
-        await update.message.reply_text(msg)
+    msg, currency = await netflix_input_parse(input_text, quote)
+    if msg is not None:
+        await message.reply(msg)
         return
-    delay = get_delay(update)
+    delay = get_delay(message)
 
     exchange = True
     if command == '/netflixo':
         exchange = False
 
     # 先发送处理消息
-    message = await update.message.reply_text("正在查询，请稍等...")
-        
-    response = format_netflix_prices(currency, delay, exchange)
-    
-    await context.bot.edit_message_text(
-        chat_id=update.effective_chat.id,
-        message_id=message.message_id,
-        text=response
-    )
-    if delay != None:
-        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
+    processing_msg = await message.reply("正在查询，请稍等...")
 
-async def appstore_command(update, context):
+    response = await format_netflix_prices(currency, delay, exchange)
 
-    input_text, quote = parse_input(update)
+    await processing_msg.edit_text(response)
+
+    if delay is not None:
+        asyncio.create_task(delete_message(processing_msg, delay))
+
+@dp.message_handler(commands=['appstore', 'appstoreo'])
+async def appstore_command(message: types.Message):
+    input_text, quote = await parse_input(message)
     command = input_text[0]
 
-    msg, currency, country_code, app_name, app_id = appstore_input_parse(input_text, quote)
-    if msg != None:
-        await update.message.reply_text(msg)
+    msg, currency, country_code, app_name, app_id = await appstore_input_parse(input_text, quote)
+    if msg is not None:
+        await message.reply(msg)
         return
-    delay = get_delay(update)
+    delay = get_delay(message)
 
     exchange = True
     if command == '/appstoreo':
         exchange = False
 
     # 先发送处理消息
-    message = await update.message.reply_text("正在查询，请稍等...")
-        
-    response = format_appstore_prices(currency, country_code, app_name, app_id, delay, exchange)
-    
-    await context.bot.edit_message_text(
-        chat_id=update.effective_chat.id,
-        message_id=message.message_id,
-        text=response
-    )
-    if delay != None:
-        context.job_queue.run_once(delete_message, delay, data=[message.chat_id, message.message_id, context.bot])
+    processing_msg = await message.reply("正在查询，请稍等...")
 
-async def delete_message(data):
-    chat_id, message_id, bot = data.job.data
-    await bot.delete_message(chat_id=chat_id, message_id=message_id)
+    response = await format_appstore_prices(currency, country_code, app_name, app_id, delay, exchange)
 
-async def post_init(application: Application) -> None:
-    """Set up the bot commands and handlers."""
-    application.add_handler(CommandHandler('rate', rate_command))
-    application.add_handler(CommandHandler('rateu', rate_command))
-    application.add_handler(CommandHandler('ratec', rate_command))
-    application.add_handler(CommandHandler('rateg', rate_command))
-    application.add_handler(CommandHandler('bin', bin_command))
-    application.add_handler(CommandHandler('spotify', spotify_command))
-    application.add_handler(CommandHandler('spotifyo', spotify_command))
-    application.add_handler(CommandHandler('netflix', netflix_command))
-    application.add_handler(CommandHandler('netflixo', netflix_command))
-    application.add_handler(CommandHandler('appstore', appstore_command))
-    application.add_handler(CommandHandler('appstoreo', appstore_command))
+    await processing_msg.edit_text(response)
 
-    await application.bot.set_my_commands([
-        ('rate', '自定义汇率换算'),
-        ('ratec', '汇率换算到CNY'),
-        ('rateu', '汇率换算到USD'),
-        ('rateg', '汇率换算到GBP'),
-        ('bin', '查询银行卡BIN'),
-        ('spotify', '查询各个地区Spotify的汇率换算价格'),
-        ('spotifyo', '查询各个地区Spotify的本地货币价格'),
-        ('netflix', '查询各个地区Netflix的汇率换算价格'),
-        ('netflixo', '查询各个地区Netflix的本地货币价格'),
-        ('appstore', '查询各个地区AppStore的汇率换算价格'),
-        ('appstoreo', '查询各个地区AppStore的本地货币价格')
-    ])
-
-def main() -> None:
-    """Start the bot."""
-    application = Application.builder().token(TOKEN).post_init(post_init).build()
-    print("Bot has been launched successfully!")
-    application.run_polling()
+    if delay is not None:
+        asyncio.create_task(delete_message(processing_msg, delay))
 
 if __name__ == '__main__':
-    main()
+    # executor.start_polling(dp, skip_updates=True)
+    print('Bot started.')
+    loop = asyncio.get_event_loop()
+    loop.create_task(dp.start_polling())
+    loop.run_forever()

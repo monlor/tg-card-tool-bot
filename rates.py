@@ -69,7 +69,7 @@ def get_rates_from_exchangerate(source, target):
 
     return float(data["conversion_rate"])
 
-def get_rates(source, target):
+async def get_rates(source, target):
 
     # 取缓存
     rate = cache.get(f'{source}-{target}')
@@ -86,7 +86,7 @@ def get_rates(source, target):
 
     return rate
 
-def format_rate_response(source, target, amount, delay, rate):
+async def format_rate_response(source, target, amount, delay, rate):
     response = "💡 汇率换算\n"
     response += f"\n💹 汇率查询: 1 {source} = {rate} {target}\n"
 
@@ -99,12 +99,12 @@ def format_rate_response(source, target, amount, delay, rate):
     return response
 
 
-def format_rates_list(delay, main_currency):
+async def format_rates_list(delay, main_currency):
     output = f"💡 汇率查询 1 {main_currency}\n\n"
     for c in RATES_LIST:
         if c['currency'] == main_currency:
             continue
-        rate = get_rates(main_currency, c['currency'])
+        rate = await get_rates(main_currency, c['currency'])
         if rate != None:
             output += f"{c['description']}:  {rate}\n"
 
@@ -127,7 +127,7 @@ def find_rate_from_text(input_string):
     else:
         return None, None
 
-def rate_input_parse(input_text, quote):
+async def rate_input_parse(input_text, quote):
     usage_text = 'Usage: /rate [货币，例如HKD] [金额]; /rate [来源货币] [目标货币] [来源金额]'
     command = input_text[0]
     source = None
@@ -169,7 +169,7 @@ def rate_input_parse(input_text, quote):
 
 
 # 汇率换算，存在key err,price,target_price,currency
-def do_exchange(items, currency):
+async def do_exchange(items, currency):
     for item in items:
         if item['err'] != None:
             continue
@@ -177,7 +177,7 @@ def do_exchange(items, currency):
         price = item['price']
         if price != None:
             if item['currency'] != currency:
-                rate = get_rates(item['currency'], currency)
+                rate = await get_rates(item['currency'], currency)
                 if rate != None:
                     target_price = price * rate
                 else:
