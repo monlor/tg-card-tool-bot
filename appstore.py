@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from cache import Cache
-from rates import do_exchange
+from rates import do_exchange, get_rates
 import os
 
 load_dotenv()
@@ -50,13 +50,14 @@ def get_country_info(country_code):
         return None, flag, name, currency
     else:
         # 处理失败响应
-        return f"请求失败，状态码：{response.status_code}"
+        return f"国家信息请求失败，状态码：{response.status_code}", None, None, None
 
 def get_data(currency, country_code, app_name, app_id):
     cache_key = f'{currency}-{country_code}-{app_id}'
     res = cache.get(cache_key)
+    app_price = cache.get(f'{cache_key}-app')
     if res != None:
-        return None, res
+        return None, res, app_price
     url = f"https://apps.apple.com/{country_code}/app/{app_name}/{app_id}"
     # Send a GET request to the URL
     response = requests.get(url)
@@ -67,7 +68,7 @@ def get_data(currency, country_code, app_name, app_id):
         data = response.content
     else:
         # 处理失败响应
-        return f"请求失败，状态码：{response.status_code}，该地区可能不支持查询！", None
+        return f"AppStore请求失败，状态码：{response.status_code}，该地区可能不支持查询！", None, None
 
     # Parse the HTML content
     soup = BeautifulSoup(data, "html.parser")
@@ -83,13 +84,26 @@ def get_data(currency, country_code, app_name, app_id):
         err, price = parse_price(country_code, price)
         services.append({"name": title, "price": float(price), "err": err, 'currency': currency})
 
+    # 获取应用价格
+    app_price_text = None
+    price_element = soup.find('li', class_='inline-list__item inline-list__item--bulleted app-header__list__item--price')
+    if price_element != None:
+        err, app_price_text = parse_price(country_code, price_element.text)
+
+    if app_price_text != None:
+        app_price = float(app_price_text)
+        cache.set(f'{cache_key}-app', app_price)
+
     cache.set(cache_key, services)
-    return None, services
+
+    return None, services, app_price
 
 def format_appstore_prices(main_currency, country_code, app_name, app_id, delay, exchange):
     err, flag, country_name, currency = get_country_info(country_code)
+    if err != None:
+        return err
 
-    err, prices = get_data(currency, country_code, app_name, app_id)
+    err, prices, app_price = get_data(currency, country_code, app_name, app_id)
 
     if err != None:
         return err
@@ -97,6 +111,11 @@ def format_appstore_prices(main_currency, country_code, app_name, app_id, delay,
     # 判断是否做汇率换算
     if exchange:
         do_exchange(prices, main_currency)
+        rate = get_rates(currency, main_currency)
+        if rate != None:
+            app_price = app_price * rate
+        else:
+            app_price = None
         output = f'💡 AppStore 价格查询 {main_currency}\n\n'
     else:
         main_currency = currency
@@ -104,6 +123,12 @@ def format_appstore_prices(main_currency, country_code, app_name, app_id, delay,
 
     output += f'🌍 地区：{flag} {country_name}\n\n'
     
+    if app_price != None:
+        output += f'🏷️ 应用购买价格 👉 {app_price:.2f} {main_currency}\n\n'
+    
+    if len(prices) == 0:
+        output += f'😄 这个App没有内购信息！'
+
     for item in prices:
         if item['err'] != None:
             output += f"📚 {item['name']} 👉 {item['err']}\n"
