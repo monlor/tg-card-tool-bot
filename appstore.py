@@ -127,7 +127,7 @@ def format_appstore_prices(main_currency, country_code, app_name, app_id, delay,
         output += f'🏷️ 应用购买价格 👉 {app_price:.2f} {main_currency}\n\n'
     
     if len(prices) == 0:
-        output += f'😄 这个App没有内购信息！'
+        output += f'😄 这个App没有内购信息！\n'
 
     for item in prices:
         if item['err'] != None:
