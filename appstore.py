@@ -224,7 +224,7 @@ async def appstore_input_parse(input_text, quote):
     country_code_ori, app_name, app_id = is_appstore_url(url)
 
     if country_code_ori == None or app_name == None or app_id == None:
-        return usage_text
+        return usage_text, None, None, None, None
 
     if country_code == None:
         country_code = country_code_ori
