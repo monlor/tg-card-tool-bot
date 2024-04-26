@@ -4,6 +4,7 @@ import aiogram
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 import asyncio
+import logging
 
 load_dotenv()
 
@@ -19,6 +20,12 @@ from appstore import appstore_input_parse, format_appstore_prices
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
+
+# 配置日志记录器
+logging.basicConfig(level=logging.INFO)
+
+# 创建一个日志记录器
+logger = logging.getLogger(__name__)
 
 async def parse_input(message):
     input_text = message.text.split()
@@ -41,7 +48,7 @@ async def delete_message(message, delay):
         await message.delete()
     except Exception as e:
         # Handle any exceptions that may occur during message deletion
-        print(f"Error deleting message: {e}")
+        logger.info(f"Error deleting message: {e}")
 
 @dp.message_handler(commands=['rate', 'rateu', 'ratec', 'rateg'])
 async def rate_command(message: types.Message):
@@ -169,30 +176,30 @@ async def appstore_command(message: types.Message):
 
 async def refresh_cache():
     while True:
-        print("Refresh cache for Netflix ...")
+        logger.info("Refresh cache for Netflix ...")
         await format_netflix_prices('CNY', None, True)
 
-        print("Refresh cache for Spotify ...")
+        logger.info("Refresh cache for Spotify ...")
         await format_spotify_prices('CNY', None, True)
 
-        print("Refresh cache for ratec ...")
+        logger.info("Refresh cache for ratec ...")
         await format_rates_list(None, 'CNY')
 
-        print("Refresh cache for rateu ...")
+        logger.info("Refresh cache for rateu ...")
         await format_rates_list(None, 'USD')
 
-        print("Refresh cache for rateg ...")
+        logger.info("Refresh cache for rateg ...")
         await format_rates_list(None, 'GBP')
 
         wait_time = 60 * 60 * REFRESH_CACHE
 
-        print(f'Wait {REFRESH_CACHE} hours ...')
+        logger.info(f'Wait {REFRESH_CACHE} hours ...')
 
         await asyncio.sleep(wait_time)
 
 if __name__ == '__main__':
     # executor.start_polling(dp, skip_updates=True)
-    print('Bot started.')
+    logger.info('Bot started.')
     loop = asyncio.get_event_loop()
     if REFRESH_CACHE != 0:
         loop.create_task(refresh_cache())
