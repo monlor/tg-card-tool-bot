@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from cache import Cache
 from rates import do_exchange
 import os
+import time
 
 load_dotenv()
 
@@ -79,6 +80,8 @@ def list_netflix_price(countries):
         currency = country['currency']
         description = country['description']
         err, data = get_netflix_data(code)
+        # 每次请求完成等待1s，防止出现429
+        time.sleep(1)
         if err != None:
             result.append({ 'country_code': code , 'price': None, 'err': err, 'currency': currency, 'description': description })
             continue

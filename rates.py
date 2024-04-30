@@ -171,9 +171,10 @@ async def rate_input_parse(input_text, quote):
 # 汇率换算，存在key err,price,target_price,currency
 async def do_exchange(items, currency):
     for item in items:
-        if item['err'] != None:
-            continue
         target_price = 0
+        if item['err'] != None:
+            item['target_price'] = target_price
+            continue
         price = item['price']
         if price != None:
             if item['currency'] != currency:
