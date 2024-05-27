@@ -61,6 +61,13 @@ def parse_price(country_code, price):
     return None, price
 
 def get_country_info(country_code):
+
+    # 先查本地数据
+    country_code_lower = country_code.lower()
+    if country_code_lower in country_infos:
+        country_info = country_infos[country_code_lower]
+        return None, country_info['flag'], country_info['name'], country_info['currency']
+
     res = cache.get(country_code)
     if res != None:
         return None, res['flag'], res['name'], res['currency']
@@ -86,12 +93,7 @@ def get_country_info(country_code):
             # 处理失败响应
             return f"国家信息请求失败，状态码：{response.status_code}", None, None, None
     except requests.RequestException as e:
-        # 从本地数据中获取
-        country_code = country_code.lower()
-        if country_code in country_infos:
-            return None, country_infos[country_code]['flag'], country_infos[country_code]['name'], country_infos[country_code]['currency']
-        else:
-            return f"国家信息获取失败，错误：{e}", None, None, None
+        return f"国家信息请求失败，错误：{e}", None, None, None
 
 def get_data(currency, country_code, app_name, app_id):
     cache_key = f'{currency}-{country_code}-{app_id}'
