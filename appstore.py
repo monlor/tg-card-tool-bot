@@ -193,7 +193,7 @@ async def format_appstore_prices(main_currency, country_codes, app_name, app_id,
                     output += f"📚 {item['name']} 👉 {item['price']} {main_currency}\n"
     
     if delay != None:
-        output += f"\n👋 将在{delay}秒后删除消息..."
+        output += f"\n\n👋 将在{delay}秒后删除消息..."
 
     return output
 
