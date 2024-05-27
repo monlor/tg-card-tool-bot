@@ -231,7 +231,7 @@ if __name__ == '__main__':
     # executor.start_polling(dp, skip_updates=True)
     logger.info('Bot started.')
     loop = asyncio.get_event_loop()
-    loop.create_task(executor.start_polling(dp, skip_updates=True, on_startup=set_bot_commands))
     if REFRESH_CACHE != 0:
         loop.create_task(refresh_cache())
+    loop.create_task(executor.start_polling(dp, skip_updates=True, on_startup=set_bot_commands))    
     loop.run_forever()
